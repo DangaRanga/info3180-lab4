@@ -23,7 +23,6 @@ def get_uploaded_images():
         <list> A list of the files in the upload folder
     """
     upload_dir = app.config.get('UPLOAD_FOLDER')
-    files = []
     return sorted(os.listdir(upload_dir))
    # for file in os.listdir(upload_dir):
        # files.append(os.path.join(upload_dir, file))
