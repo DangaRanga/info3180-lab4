@@ -1,3 +1,23 @@
+* {
+  list-style-type: none;
+}
 body {
-    padding-top: 5rem;
+  padding-top: 5rem;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 0.1fr);
+  gap: 5px;
+}
+
+img {
+  height: 120px;
+  width: 120px;
+}
+
+.flex-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

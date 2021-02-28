@@ -6,17 +6,38 @@ This file creates your application.
 """
 import os
 from app import app
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, send_from_directory
 from werkzeug.utils import secure_filename
 
+from .forms import UploadForm
+
+# Helper methods
+
+def get_uploaded_images():
+    """Retrieves uploaded images
+
+    Args:
+        None
+
+    Returns:
+        <list> A list of the files in the upload folder
+    """
+    upload_dir = app.config.get('UPLOAD_FOLDER')
+    files = []
+    return sorted(os.listdir(upload_dir))
+   # for file in os.listdir(upload_dir):
+       # files.append(os.path.join(upload_dir, file))
+   # return files
 
 ###
 # Routing for your application.
 ###
 
+
 @app.route('/')
 def home():
     """Render website's home page."""
+    print(get_uploaded_images())
     return render_template('home.html')
 
 
@@ -32,16 +53,34 @@ def upload():
         abort(401)
 
     # Instantiate your form class
+    upload_form = UploadForm()
 
     # Validate file upload on submit
     if request.method == 'POST':
-        # Get file data and save to your uploads folder
+        if upload_form.validate_on_submit():
 
-        flash('File Saved', 'success')
-        return redirect(url_for('home'))
+            # Get file data and save to your uploads folder
+            file = upload_form.image.data
+            file_name = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file_name))
 
-    return render_template('upload.html')
+            flash('File Saved', 'success')
+            return redirect(url_for('home'))
 
+    return render_template('upload.html', form=upload_form)
+
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    upload_dir = app.config.get('UPLOAD_FOLDER')
+    return send_from_directory(upload_dir, filename)
+
+@app.route('/files')
+def files():
+    if not session.get('logged_in'):
+        abort(401)
+    
+    images = get_uploaded_images()
+    return render_template('files.html', files=images)
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -51,7 +90,7 @@ def login():
             error = 'Invalid username or password'
         else:
             session['logged_in'] = True
-            
+
             flash('You were logged in', 'success')
             return redirect(url_for('upload'))
     return render_template('login.html', error=error)
@@ -75,7 +114,8 @@ def flash_errors(form):
             flash(u"Error in the %s field - %s" % (
                 getattr(form, field).label.text,
                 error
-), 'danger')
+            ), 'danger')
+
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
@@ -101,5 +141,5 @@ def page_not_found(error):
     return render_template('404.html'), 404
 
 
-if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port="8080")
+#if __name__ == '__main__':
+ #   app.run(debug=True, host="0.0.0.0", port="8080")
